@@ -1,0 +1,490 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>감천초등학교 4학년 1반 대시보드</title>
+    <!-- Tailwind CSS (CDN) -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* 배달의민족 주아 폰트 */
+        @font-face {
+            font-family: 'BMJUA';
+            src: url('https://fastly.jsdelivr.net/gh/projectnoonnu/noonfonts_one@1.0/BMJUA.woff') format('woff');
+            font-weight: normal;
+            font-style: normal;
+        }
+
+        body {
+            font-family: 'BMJUA', sans-serif;
+            background-color: #121318;
+            color: #f8fafc;
+        }
+
+        /* 심플 카드 스타일 */
+        .card {
+            background-color: #1e2029;
+            border: 1px solid #2d3142;
+            border-radius: 1rem;
+        }
+
+        /* Custom Scrollbar */
+        ::-webkit-scrollbar {
+            width: 8px;
+        }
+        ::-webkit-scrollbar-track {
+            background: #1e2029;
+        }
+        ::-webkit-scrollbar-thumb {
+            background: #3b4252;
+            border-radius: 4px;
+        }
+        ::-webkit-scrollbar-thumb:hover {
+            background: #4c566a;
+        }
+    </style>
+</head>
+<body class="min-h-screen p-4 sm:p-6 flex flex-col justify-between">
+
+    <!-- 상단 헤더 & 시계 레벨 -->
+    <header class="mb-6 flex flex-col md:flex-row items-center justify-between gap-4 card p-5">
+        <div class="flex items-center gap-3">
+            <div class="p-3 bg-indigo-600/30 rounded-xl border border-indigo-500/30 text-indigo-400">
+                <i class="fa-solid font-bold text-2xl fa-school"></i>
+            </div>
+            <div>
+                <h1 class="text-2xl sm:text-3xl font-bold tracking-wide text-white">감천초등학교 <span class="text-indigo-400">4학년 1반</span></h1>
+                <p id="current-date" class="text-lg text-gray-400 mt-0.5">2026년 00월 00일 요일</p>
+            </div>
+        </div>
+        
+        <!-- 실시간 디지털 시계 -->
+        <div class="bg-slate-900/80 px-6 py-2.5 rounded-2xl border border-slate-800 text-center">
+            <span id="current-time" class="text-4xl sm:text-5xl font-bold text-indigo-300 tracking-wider">00:00:00</span>
+        </div>
+    </header>
+
+    <!-- 메인 콘텐츠 영역 (그리드) -->
+    <main class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 flex-1 mb-6">
+        
+        <!-- 1. 오늘의 급식 (공공 API) -->
+        <section class="card p-5 flex flex-col">
+            <div class="flex items-center justify-between pb-3 mb-3 border-b border-gray-800">
+                <h2 class="text-xl font-bold flex items-center gap-2 text-amber-400">
+                    <i class="fa-solid fa-utensils"></i> 오늘의 급식
+                </h2>
+                <div class="flex gap-2">
+                    <button id="btn-meal-today" onclick="fetchMeal(0)" class="px-2.5 py-1 text-sm bg-amber-500/20 text-amber-300 rounded-lg border border-amber-500/30 hover:bg-amber-500/30 transition">오늘</button>
+                    <button id="btn-meal-tomorrow" onclick="fetchMeal(1)" class="px-2.5 py-1 text-sm bg-gray-800 text-gray-400 rounded-lg border border-gray-700 hover:bg-gray-700 transition">내일</button>
+                </div>
+            </div>
+
+            <div id="meal-content" class="flex-1 flex flex-col justify-center items-center text-center p-2 min-h-[180px]">
+                <i class="fa-solid fa-spinner animate-spin text-3xl text-amber-400 mb-2"></i>
+                <p class="text-gray-400 text-base">급식 정보를 불러오는 중입니다...</p>
+            </div>
+            
+            <p id="meal-date-label" class="text-xs text-right text-gray-500 mt-2"></p>
+        </section>
+
+        <!-- 2. 시간 조절 타이머 -->
+        <section class="card p-5 flex flex-col justify-between">
+            <div class="pb-3 mb-2 border-b border-gray-800 flex justify-between items-center">
+                <h2 class="text-xl font-bold flex items-center gap-2 text-cyan-400">
+                    <i class="fa-solid fa-stopwatch"></i> 활동 타이머
+                </h2>
+                <span id="timer-status" class="text-xs px-2 py-1 bg-slate-800 text-gray-400 rounded-md">대기 중</span>
+            </div>
+
+            <div class="flex-1 flex flex-col items-center justify-center my-2">
+                <div id="timer-display" class="text-6xl font-bold tracking-widest text-white my-2">
+                    05:00
+                </div>
+                
+                <!-- 시간 추가 버튼들 -->
+                <div class="flex gap-2 my-3">
+                    <button onclick="addTimerSeconds(60)" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-sm text-cyan-300 rounded-lg border border-slate-700 transition">+1분</button>
+                    <button onclick="addTimerSeconds(300)" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-sm text-cyan-300 rounded-lg border border-slate-700 transition">+5분</button>
+                    <button onclick="addTimerSeconds(600)" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-sm text-cyan-300 rounded-lg border border-slate-700 transition">+10분</button>
+                    <button onclick="resetTimer()" class="px-3 py-1 bg-slate-800 hover:bg-slate-700 text-sm text-rose-400 rounded-lg border border-slate-700 transition">리셋</button>
+                </div>
+            </div>
+
+            <!-- 조작 버튼 -->
+            <div class="grid grid-cols-2 gap-3">
+                <button id="timer-start-btn" onclick="toggleTimer()" class="py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-lg font-bold transition shadow-lg shadow-cyan-600/20">
+                    <i class="fa-solid fa-play mr-1"></i> 시작
+                </button>
+                <button onclick="setTimerPreset()" class="py-2.5 bg-slate-800 hover:bg-slate-700 text-gray-300 rounded-xl text-lg font-bold border border-slate-700 transition">
+                    <i class="fa-solid fa-pen-to-square mr-1"></i> 직접설정
+                </button>
+            </div>
+        </section>
+
+        <!-- 3. 발표 도우미 (학생 랜덤 추첨) -->
+        <section class="card p-5 flex flex-col justify-between">
+            <div class="pb-3 mb-2 border-b border-gray-800 flex justify-between items-center">
+                <h2 class="text-xl font-bold flex items-center gap-2 text-emerald-400">
+                    <i class="fa-solid fa-dice"></i> 발표 도우미
+                </h2>
+                <button onclick="openStudentModal()" class="text-xs px-2 py-1 bg-slate-800 hover:bg-slate-700 text-emerald-300 rounded-md border border-slate-700 transition">
+                    <i class="fa-solid fa-gear"></i> 명단 수정
+                </button>
+            </div>
+
+            <div class="flex-1 flex flex-col items-center justify-center my-2 text-center">
+                <div id="picker-result" class="text-4xl font-bold text-white bg-slate-900/90 w-full py-8 rounded-2xl border border-slate-800 shadow-inner flex items-center justify-center min-h-[120px]">
+                    <span class="text-gray-500 text-2xl">누가 발표할까요?</span>
+                </div>
+            </div>
+
+            <button onclick="pickRandomStudent()" class="w-full py-2.5 bg-emerald-600 hover:bg-emerald-500 text-white rounded-xl text-lg font-bold transition shadow-lg shadow-emerald-600/20">
+                <i class="fa-solid fa-shuffle mr-1"></i> 학생 뽑기!
+            </button>
+        </section>
+
+        <!-- 4. 학급 메모장 (자동 저장) -->
+        <section class="card p-5 md:col-span-2 lg:col-span-3 flex flex-col">
+            <div class="pb-3 mb-3 border-b border-gray-800 flex justify-between items-center">
+                <h2 class="text-xl font-bold flex items-center gap-2 text-indigo-400">
+                    <i class="fa-solid fa-clipboard-list"></i> 학급 메모장
+                    <span class="text-xs font-normal text-gray-400 bg-slate-800 px-2.5 py-0.5 rounded-full border border-slate-700">자동 저장됨</span>
+                </h2>
+                <span id="save-indicator" class="text-xs text-gray-500 transition-opacity opacity-0">
+                    <i class="fa-solid fa-check text-emerald-400"></i> 저장완료
+                </span>
+            </div>
+
+            <textarea id="class-memo" 
+                class="w-full h-44 p-4 bg-slate-900/70 border border-slate-800 rounded-xl text-white text-lg placeholder-gray-600 focus:outline-none focus:border-indigo-500 transition resize-none leading-relaxed" 
+                placeholder="• 오늘 꼭 알려줘야 할 알림장 내용&#10;• 제출해야 하는 과제나 안내문&#10;• 이동수업 교실 안내 등을 자유롭게 적어두세요!"></textarea>
+        </section>
+
+    </main>
+
+    <!-- 푸터 -->
+    <footer class="text-center text-xs text-gray-600 pt-2 border-t border-gray-800/60">
+        감천초등학교 4학년 1반 학급 대시보드 | NEIS 공공 API 연동 | 자동 저장 메모장
+    </footer>
+
+    <!-- 명단 수정 모달 -->
+    <div id="student-modal" class="fixed inset-0 bg-black/80 backdrop-blur-sm hidden flex items-center justify-center p-4 z-50">
+        <div class="card max-w-md w-full p-6 shadow-2xl border border-slate-700">
+            <h3 class="text-xl font-bold text-white mb-2 flex items-center gap-2">
+                <i class="fa-solid fa-users-gear text-emerald-400"></i> 학생 명단 수정
+            </h3>
+            <p class="text-xs text-gray-400 mb-4">줄바꿈(Enter)으로 구분하여 학생 이름을 적어주세요.</p>
+            
+            <textarea id="student-list-input" class="w-full h-60 p-3 bg-slate-900 border border-slate-700 rounded-xl text-white text-sm focus:outline-none focus:border-emerald-500 mb-4 font-mono leading-relaxed"></textarea>
+            
+            <div class="flex justify-end gap-2">
+                <button onclick="closeStudentModal()" class="px-4 py-2 bg-slate-800 hover:bg-slate-700 text-gray-300 rounded-lg text-sm transition">취소</button>
+                <button onclick="saveStudentList()" class="px-4 py-2 bg-emerald-600 hover:bg-emerald-500 text-white rounded-lg text-sm font-bold transition">저장하기</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- 스크립트 영역 -->
+    <script>
+        // --- 1. 시계 & 날짜 기능 ---
+        function updateClock() {
+            const now = new Date();
+            
+            // 날짜 형식화
+            const year = now.getFullYear();
+            const month = now.getMonth() + 1;
+            const date = now.getDate();
+            const days = ['일요일', '월요일', '화요일', '수요일', '목요일', '금요일', '토요일'];
+            const dayName = days[now.getDay()];
+            
+            document.getElementById('current-date').innerText = `${year}년 ${month}월 ${date}일 ${dayName}`;
+
+            // 시계 형식화
+            const hours = String(now.getHours()).padStart(2, '0');
+            const minutes = String(now.getMinutes()).padStart(2, '0');
+            const seconds = String(now.getSeconds()).padStart(2, '0');
+            
+            document.getElementById('current-time').innerText = `${hours}:${minutes}:${seconds}`;
+        }
+        setInterval(updateClock, 1000);
+        updateClock();
+
+        // --- 2. 학급 메모장 (localStorage 자동 저장) ---
+        const memoArea = document.getElementById('class-memo');
+        const saveIndicator = document.getElementById('save-indicator');
+
+        // 저장된 메모 로드
+        const savedMemo = localStorage.getItem('gamcheon_4_1_memo');
+        if (savedMemo !== null) {
+            memoArea.value = savedMemo;
+        }
+
+        // 입력 시 자동 저장
+        let saveTimeout;
+        memoArea.addEventListener('input', () => {
+            localStorage.setItem('gamcheon_4_1_memo', memoArea.value);
+            
+            // 저장 완료 아이콘 표시
+            saveIndicator.classList.remove('opacity-0');
+            clearTimeout(saveTimeout);
+            saveTimeout = setTimeout(() => {
+                saveIndicator.classList.add('opacity-0');
+            }, 1500);
+        });
+
+        // --- 3. 타이머 기능 ---
+        let timerSeconds = 300; // 기본 5분
+        let timerInterval = null;
+        let isTimerRunning = false;
+
+        function updateTimerDisplay() {
+            const mins = Math.floor(timerSeconds / 60);
+            const secs = timerSeconds % 60;
+            document.getElementById('timer-display').innerText = 
+                `${String(mins).padStart(2, '0')}:${String(secs).padStart(2, '0')}`;
+        }
+
+        function toggleTimer() {
+            const btn = document.getElementById('timer-start-btn');
+            const status = document.getElementById('timer-status');
+
+            if (isTimerRunning) {
+                // 일시정지
+                clearInterval(timerInterval);
+                isTimerRunning = false;
+                btn.innerHTML = '<i class="fa-solid fa-play mr-1"></i> 재개';
+                btn.className = "py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-lg font-bold transition shadow-lg shadow-cyan-600/20";
+                status.innerText = "일시정지";
+                status.className = "text-xs px-2 py-1 bg-amber-900/50 text-amber-300 rounded-md border border-amber-800";
+            } else {
+                // 시작
+                if (timerSeconds <= 0) return;
+                
+                isTimerRunning = true;
+                btn.innerHTML = '<i class="fa-solid fa-pause mr-1"></i> 정지';
+                btn.className = "py-2.5 bg-amber-600 hover:bg-amber-500 text-white rounded-xl text-lg font-bold transition shadow-lg shadow-amber-600/20";
+                status.innerText = "진행 중";
+                status.className = "text-xs px-2 py-1 bg-cyan-900/50 text-cyan-300 rounded-md border border-cyan-800";
+
+                timerInterval = setInterval(() => {
+                    if (timerSeconds > 0) {
+                        timerSeconds--;
+                        updateTimerDisplay();
+                    } else {
+                        // 타이머 종료
+                        clearInterval(timerInterval);
+                        isTimerRunning = false;
+                        btn.innerHTML = '<i class="fa-solid fa-play mr-1"></i> 시작';
+                        btn.className = "py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-lg font-bold transition shadow-lg shadow-cyan-600/20";
+                        status.innerText = "종료!";
+                        status.className = "text-xs px-2 py-1 bg-rose-900/50 text-rose-300 rounded-md border border-rose-800 animate-pulse";
+                        playTimerAlarm();
+                    }
+                }, 1000);
+            }
+        }
+
+        function addTimerSeconds(sec) {
+            timerSeconds += sec;
+            updateTimerDisplay();
+        }
+
+        function resetTimer() {
+            clearInterval(timerInterval);
+            isTimerRunning = false;
+            timerSeconds = 300;
+            updateTimerDisplay();
+            
+            const btn = document.getElementById('timer-start-btn');
+            const status = document.getElementById('timer-status');
+            btn.innerHTML = '<i class="fa-solid fa-play mr-1"></i> 시작';
+            btn.className = "py-2.5 bg-cyan-600 hover:bg-cyan-500 text-white rounded-xl text-lg font-bold transition shadow-lg shadow-cyan-600/20";
+            status.innerText = "대기 중";
+            status.className = "text-xs px-2 py-1 bg-slate-800 text-gray-400 rounded-md";
+        }
+
+        function setTimerPreset() {
+            const input = prompt("설정할 분(Minute)을 입력하세요:", "5");
+            if (input !== null && !isNaN(input) && input > 0) {
+                clearInterval(timerInterval);
+                isTimerRunning = false;
+                timerSeconds = parseInt(input) * 60;
+                updateTimerDisplay();
+                
+                const btn = document.getElementById('timer-start-btn');
+                btn.innerHTML = '<i class="fa-solid fa-play mr-1"></i> 시작';
+            }
+        }
+
+        function playTimerAlarm() {
+            try {
+                const ctx = new (window.AudioContext || window.webkitAudioContext)();
+                const osc = ctx.createOscillator();
+                const gain = ctx.createGain();
+                
+                osc.type = 'sine';
+                osc.frequency.setValueAtTime(587.33, ctx.currentTime); // D5
+                osc.frequency.setValueAtTime(880, ctx.currentTime + 0.2); // A5
+                
+                gain.gain.setValueAtTime(0.3, ctx.currentTime);
+                gain.gain.exponentialRampToValueAtTime(0.01, ctx.currentTime + 0.8);
+                
+                osc.connect(gain);
+                gain.connect(ctx.destination);
+                
+                osc.start();
+                osc.stop(ctx.currentTime + 0.8);
+            } catch(e) {
+                console.log("Audio play blocked");
+            }
+        }
+
+        // --- 4. 발표 도우미 (학생 랜덤 뽑기) ---
+        let defaultStudents = [
+            "1번 김민준", "2번 이서준", "3번 박도윤", "4번 최시우", "5번 정주원",
+            "6번 강하준", "7번 조지호", "8번 윤지후", "9번 장준우", "10번 임건우",
+            "11번 한서연", "12번 오서윤", "13번 서지우", "14번 신하윤", "15번 권지아",
+            "16번 황서아", "17번 안아윤", "18번 송다은", "19번 전은서", "20번 홍채원"
+        ];
+
+        function getStudentList() {
+            const saved = localStorage.getItem('gamcheon_4_1_students');
+            if (saved) {
+                return JSON.parse(saved);
+            }
+            return defaultStudents;
+        }
+
+        function openStudentModal() {
+            const list = getStudentList();
+            document.getElementById('student-list-input').value = list.join('\n');
+            document.getElementById('student-modal').classList.remove('hidden');
+        }
+
+        function closeStudentModal() {
+            document.getElementById('student-modal').classList.add('hidden');
+        }
+
+        function saveStudentList() {
+            const rawText = document.getElementById('student-list-input').value;
+            const lines = rawText.split('\n').map(s => s.trim()).filter(s => s.length > 0);
+            if (lines.length === 0) {
+                alert("최소 한 명 이상의 학생 이름을 입력해주세요.");
+                return;
+            }
+            localStorage.setItem('gamcheon_4_1_students', JSON.stringify(lines));
+            closeStudentModal();
+        }
+
+        let isPicking = false;
+        function pickRandomStudent() {
+            if (isPicking) return;
+            const students = getStudentList();
+            if (students.length === 0) return;
+
+            isPicking = true;
+            const resultDiv = document.getElementById('picker-result');
+            let counter = 0;
+            const totalSteps = 20;
+
+            const interval = setInterval(() => {
+                const randomIndex = Math.floor(Math.random() * students.length);
+                resultDiv.innerHTML = `<span class="text-emerald-400 font-bold">${students[randomIndex]}</span>`;
+                counter++;
+
+                if (counter >= totalSteps) {
+                    clearInterval(interval);
+                    const finalIndex = Math.floor(Math.random() * students.length);
+                    resultDiv.innerHTML = `<span class="text-amber-300 text-4xl sm:text-5xl font-extrabold animate-bounce">${students[finalIndex]}</span>`;
+                    isPicking = false;
+                }
+            }, 80);
+        }
+
+        // --- 5. 공공 API 급식 정보 (마산 감천초등학교) ---
+        // 경상남도교육청 코드: S10 / 학교코드: 9010162 (감천초등학교)
+        const ATPT_OFCDC_SC_CODE = 'S10';
+        const SD_SCHUL_CODE = '9010162';
+
+        function fetchMeal(dayOffset = 0) {
+            const contentDiv = document.getElementById('meal-content');
+            const todayBtn = document.getElementById('btn-meal-today');
+            const tomorrowBtn = document.getElementById('btn-meal-tomorrow');
+            const dateLabel = document.getElementById('meal-date-label');
+
+            if (dayOffset === 0) {
+                todayBtn.className = "px-2.5 py-1 text-sm bg-amber-500/20 text-amber-300 rounded-lg border border-amber-500/30 font-bold";
+                tomorrowBtn.className = "px-2.5 py-1 text-sm bg-gray-800 text-gray-400 rounded-lg border border-gray-700 hover:bg-gray-700 transition";
+            } else {
+                tomorrowBtn.className = "px-2.5 py-1 text-sm bg-amber-500/20 text-amber-300 rounded-lg border border-amber-500/30 font-bold";
+                todayBtn.className = "px-2.5 py-1 text-sm bg-gray-800 text-gray-400 rounded-lg border border-gray-700 hover:bg-gray-700 transition";
+            }
+
+            contentDiv.innerHTML = `
+                <i class="fa-solid fa-spinner animate-spin text-3xl text-amber-400 mb-2"></i>
+                <p class="text-gray-400 text-sm">급식을 가져오는 중입니다...</p>
+            `;
+
+            const targetDate = new Date();
+            targetDate.setDate(targetDate.getDate() + dayOffset);
+            
+            const year = targetDate.getFullYear();
+            const month = String(targetDate.getMonth() + 1).padStart(2, '0');
+            const date = String(targetDate.getDate()).padStart(2, '0');
+            const ymd = `${year}${month}${date}`;
+
+            dateLabel.innerText = `${year}.${month}.${date} 기준`;
+
+            // 나이스 오픈 API 호출
+            const url = `https://open.neis.go.kr/hub/mealServiceDietInfo?Type=json&pIndex=1&pSize=10&ATPT_OFCDC_SC_CODE=${ATPT_OFCDC_SC_CODE}&SD_SCHUL_CODE=${SD_SCHUL_CODE}&MLSV_YMD=${ymd}`;
+
+            fetch(url)
+                .then(res => res.json())
+                .then(data => {
+                    if (data.mealServiceDietInfo && data.mealServiceDietInfo[1] && data.mealServiceDietInfo[1].row) {
+                        const row = data.mealServiceDietInfo[1].row[0];
+                        // 알레르기 수치 제거 및 정제
+                        let menuText = row.DDISH_NM
+                            .replace(/<br\/>/g, '\n')
+                            .replace(/\([0-9.]+\)/g, '') // 알레르기 번호 제거
+                            .trim();
+
+                        const menuArray = menuText.split('\n').filter(item => item.trim() !== '');
+
+                        contentDiv.innerHTML = `
+                            <ul class="w-full text-left space-y-1.5 text-base sm:text-lg text-gray-200">
+                                ${menuArray.map(item => `<li class="flex items-center gap-2"><i class="fa-solid fa-caret-right text-amber-400 text-xs"></i> ${item}</li>`).join('')}
+                            </ul>
+                        `;
+                    } else {
+                        contentDiv.innerHTML = `
+                            <div class="text-center text-gray-400 my-auto">
+                                <i class="fa-solid fa-utensils text-3xl mb-2 text-gray-600"></i>
+                                <p class="text-base">등록된 급식 정보가 없습니다.</p>
+                                <p class="text-xs text-gray-500 mt-1">(주말, 공휴일 또는 방학)</p>
+                            </div>
+                        `;
+                    }
+                })
+                .catch(err => {
+                    console.error(err);
+                    contentDiv.innerHTML = `
+                        <div class="text-center text-rose-400 my-auto">
+                            <i class="fa-solid fa-circle-exclamation text-2xl mb-1"></i>
+                            <p class="text-sm">급식 정보를 불러오지 못했습니다.</p>
+                        </div>
+                    `;
+                });
+        }
+
+        // 초기 로드
+        window.onload = function() {
+            updateTimerDisplay();
+            fetchMeal(0);
+        };
+    </script>
+</body>
+</html>
